@@ -1,0 +1,4 @@
+{
+  "name": "Swarm Checkout",
+  "description": "A TypeScript checkout button whose pay action is gated by a real OpenSwarm harness risk review, shown in a MagicUI-style docs page."
+}

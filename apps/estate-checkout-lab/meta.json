@@ -1,0 +1,4 @@
+{
+  "name": "Estate Checkout Lab",
+  "description": "A real estate property browsing and checkout testbed that exercises OpenSwarm's app bridge, backend SubApp, live tracking, and host APIs with capture-time PII redaction."
+}

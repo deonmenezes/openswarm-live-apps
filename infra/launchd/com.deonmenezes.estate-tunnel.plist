@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.deonmenezes.estate-tunnel</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>/Users/deonmenezes/.openswarm/tunnel/estate-tunnel.sh</string>
+    </array>
+
+    <!-- Restart whenever the tunnel dies. The script redeploys the new hostname
+         on each start, so a dead tunnel heals itself instead of silently
+         leaving estate-checkout-lab.vercel.app pointing at nothing. -->
+    <key>KeepAlive</key>
+    <true/>
+
+    <key>RunAtLoad</key>
+    <true/>
+
+    <!-- cloudflared hostnames are rate limited, so back off between respawns
+         rather than hammering a restart loop if the backend is down. -->
+    <key>ThrottleInterval</key>
+    <integer>30</integer>
+
+    <key>StandardOutPath</key>
+    <string>/Users/deonmenezes/.openswarm/tunnel/launchd.out.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/deonmenezes/.openswarm/tunnel/launchd.err.log</string>
+</dict>
+</plist>

@@ -1,0 +1,21 @@
+node_modules/
+.venv/
+dist/
+__pycache__/
+*.pyc
+
+# Runtime config: ports here are rewritten by the OpenSwarm harness on every
+# restart, so a committed copy is misleading rather than useful.
+.env
+.env.local
+.vercel/
+
+# Captured telemetry. store.json holds real visitor sessions, including the
+# buyerName / buyerEmail values people typed into the checkout. It is data, not
+# source, and must never end up in version control.
+backend/data/store.json
+**/backend/data/store.json
+
+*.log
+.openswarm/
+.DS_Store
