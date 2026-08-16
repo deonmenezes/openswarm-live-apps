@@ -1,0 +1,14 @@
+[Unit]
+Description=OpenSwarm churn backend
+After=network.target
+
+[Service]
+User=ec2-user
+WorkingDirectory=/opt/openswarm/churn
+Environment=BACKEND_PORT=8002
+ExecStart=/opt/openswarm/.venv/bin/python -m uvicorn backend.main:app --host 127.0.0.1 --port 8002
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
