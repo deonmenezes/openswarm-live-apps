@@ -1,13 +1,19 @@
 # OpenSwarm live apps
 
-Two OpenSwarm-generated apps, deployed publicly with their backends kept on a
-local Mac. The frontends are static builds on Vercel; every `/api` call is
-rewritten to a `cloudflared` tunnel that terminates at a backend on this machine.
+Two OpenSwarm-generated apps, deployed publicly. Frontends are static builds on
+Vercel; backends run on the `openswarm-api` EC2 instance behind nginx
+(https://54-166-194-87.sslip.io). The laptop and cloudflared tunnels are no
+longer in the request path.
+
+Cloud / BYO-VM dispatch for the three EC2 machines we already have lives in
+[`infra/openswarm-cloud/`](infra/openswarm-cloud/README.md). `openswarm-api` is
+the ARM API plane; `win2025-vm` is the Windows worker; `openclaw-prod-openclaw`
+is out of bounds.
 
 | App | Public URL | Backend |
 |---|---|---|
-| `apps/estate-checkout-lab` | https://estate-checkout-lab.vercel.app | port assigned by the OpenSwarm runtime |
-| `apps/swarm-checkout-churn` | https://swarm-checkout-lab.vercel.app | fixed port 59619, owned by launchd |
+| `apps/estate-checkout-lab` | https://estate-checkout-lab.vercel.app | `openswarm-api` :8001 (`/estate`) |
+| `apps/swarm-checkout-churn` | https://swarm-checkout-lab.vercel.app | `openswarm-api` :8002 (`/churn`) |
 
 ## Why the tunnel URL is not in the bundle
 
