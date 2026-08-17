@@ -2,31 +2,53 @@
 
 Two OpenSwarm-generated apps, deployed publicly. Frontends are static builds on
 Vercel; backends run on the `openswarm-api` EC2 instance behind nginx
-(https://54-166-194-87.sslip.io). The laptop and cloudflared tunnels are no
-longer in the request path.
-
-Cloud / BYO-VM dispatch for the three EC2 machines we already have lives in
-[`infra/openswarm-cloud/`](infra/openswarm-cloud/README.md). `openswarm-api` is
-the ARM API plane; `win2025-vm` is the Windows worker; `openclaw-prod-openclaw`
-is out of bounds.
+(https://54-166-194-87.sslip.io).
 
 | App | Public URL | Backend |
 |---|---|---|
 | `apps/estate-checkout-lab` | https://estate-checkout-lab.vercel.app | `openswarm-api` :8001 (`/estate`) |
 | `apps/swarm-checkout-churn` | https://swarm-checkout-lab.vercel.app | `openswarm-api` :8002 (`/churn`) |
 
-## Why the tunnel URL is not in the bundle
+## Machines
 
-`cloudflared` quick tunnels mint a new hostname on every start, and the OpenSwarm
-harness reassigns the backend port on every runtime restart. Baking either into
-the JS would mean a rebuild each time one moved. Instead the bundle calls a
-relative `/api`, and `vercel.json` rewrites that to the current tunnel — so a
-change is a one-file redeploy, with no rebuild and no CORS.
+| Name | Instance | Type | Arch | What it does |
+|---|---|---|---|---|
+| `openswarm-api` | `i-0a2fa6d6bfd0bca9d` | t4g.small | arm64 | Both app backends under systemd behind nginx — see `infra/aws/`. |
+| `win2025-vm` | `i-0f44590a087ac14e9` | t3.small | x86_64 | Windows Server 2025, runs the Cursor worker in `infra/cursor-worker/`. |
+| `openclaw-prod-openclaw` | `i-066ddf85110a49370` | m7i-flex.large | x86_64 | A different product. Not ours to touch. |
 
-`infra/` holds the two launchd agents that keep this true without a human:
-they discover the backend port, open the tunnel, publish the hostname into
-`vercel.json`, redeploy, and then health-check the backend so a moved port or a
-dead tunnel repairs itself in about 20 seconds.
+`win2025-vm` has no inbound rules at all. It is reached with SSM Session
+Manager via the `win2025-ssm-profile` instance profile, which replaced an RDP
+rule that was open to `0.0.0.0/0`. Session Manager needs no open port, so
+there is nothing to scope to an operator IP and nothing for the internet to
+scan. It also ships PowerShell 5.1 and not `pwsh`, so scripts target 5.1.
+
+### Why OpenSwarm cloud runs are not wired up
+
+OpenSwarm's cloud path needs two things this account does not have. Its runner
+image is amd64-only, because the CastLabs Electron it boots under Xvfb has no
+linux-arm64 build — that disqualifies `openswarm-api` on architecture, and the
+one amd64 Linux box here belongs to OpenClaw. The image is also published by
+the closed `openswarm-cloud` control plane, which we can read and nothing more.
+
+Unblocking it takes an amd64 Linux host plus either a Fly registry token for
+`openswarm-runner` or a local `docker build --platform linux/amd64` from the
+OpenSwarm repo root. Until one of those exists there is no target to dispatch
+to, so `infra/cursor-worker/` is what actually runs agents on our own hardware.
+
+## The tunnels, and why they are retired
+
+`cloudflared` quick tunnels mint a new hostname on every start, and the
+OpenSwarm harness reassigns the backend port on every runtime restart, so
+nothing about a laptop-hosted backend could be baked into a JS bundle. The
+launchd agents in `infra/launchd/` absorbed both: rediscover the port, reopen
+the tunnel, publish the hostname into `vercel.json`, redeploy, health-check.
+They are no longer loaded — the sites still went down whenever the laptop
+slept, which is why the backends moved to EC2. The scripts are kept only as a
+record of that shape.
+
+The bundle still calls a relative `/api` for the reason it always did: a
+backend move stays a one-file Vercel rewrite, with no rebuild and no CORS.
 
 ## Things that only work inside OpenSwarm
 
